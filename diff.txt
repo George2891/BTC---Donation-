@@ -38,7 +38,7 @@
         <div id="qrcode"></div>
         <div class="field" style="width:100%">
           <label class="small">Donation address (Bitcoin P2PKH / legacy shown)</label>
-          <input id="address" class="input" value="1ExampleBTCAddressReplaceMe11111111111" />
+          <input id="address" class="input" value="13HZ1167XyecNcz49rReJcKLws34XzA3AM" />
         </div>
 
         <div style="display:flex;gap:8px;align-items:center;width:100%;justify-content:center">
@@ -173,4 +173,5 @@
     updateQR();
   </script>
 </body>
+
 </html>
