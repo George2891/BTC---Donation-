@@ -1,2 +1,178 @@
 # BTC---Donation-
 Donation for all
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Donate BTC — Simple Donation Page</title>
+  <style>
+    :root{--bg:#0f1724;--card:#0b1220;--accent:#f59e0b;--muted:#94a3b8;color-scheme:dark}
+    html,body{height:100%;margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial}
+    body{background:linear-gradient(180deg,#061021 0%,#071827 100%);display:flex;align-items:center;justify-content:center;padding:24px}
+    .card{background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));border-radius:12px;padding:20px;max-width:900px;width:100%;box-shadow:0 6px 28px rgba(2,6,23,0.7)}
+    h1{margin:0;font-size:20px}
+    p{color:var(--muted);margin:8px 0 16px}
+    .grid{display:grid;grid-template-columns:320px 1fr;gap:18px}
+    .qrbox{display:flex;flex-direction:column;align-items:center;gap:12px;padding:12px;border-radius:8px;background:rgba(255,255,255,0.015)}
+    #qrcode{width:260px;height:260px;display:flex;align-items:center;justify-content:center}
+    .controls{display:flex;flex-wrap:wrap;gap:8px}
+    input,select,button,textarea{font:inherit}
+    .field{display:flex;flex-direction:column;gap:6px}
+    .input{background:#071225;border:1px solid rgba(255,255,255,0.04);padding:10px;border-radius:8px;color:#e6eef8}
+    .small{font-size:13px;color:var(--muted)}
+    .btn{background:var(--accent);color:#041027;padding:8px 12px;border-radius:8px;border:none;cursor:pointer}
+    .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted)}
+    .tiers{display:flex;gap:8px}
+    .notes{margin-top:12px;font-size:13px;color:var(--muted);line-height:1.4}
+    .footer{margin-top:14px;font-size:13px;color:var(--muted)}
+    .copy-ind{font-size:13px;color:#7dd3fc}
+    @media (max-width:760px){.grid{grid-template-columns:1fr}.qrbox{order:2}}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Donate Bitcoin (BTC)</h1>
+    <p>Use this simple page to accept BTC donations. No custodial service — donors send directly to your address. (Static, client-only page.)</p>
+
+    <div class="grid">
+      <div class="qrbox">
+        <div id="qrcode"></div>
+        <div class="field" style="width:100%">
+          <label class="small">Donation address (Bitcoin P2PKH / legacy shown)</label>
+          <input id="address" class="input" value="13HZ1167XyecNcz49rReJcKLws34XzA3AM" />
+        </div>
+
+        <div style="display:flex;gap:8px;align-items:center;width:100%;justify-content:center">
+          <button id="copyAddr" class="btn">Copy address</button>
+          <button id="openExplorer" class="btn ghost">Open in block explorer</button>
+        </div>
+
+        <div class="notes">
+          <div class="small">QR encodes a BIP21 URI (bitcoin:<address>?amount=...&label=...)</div>
+          <div class="small">Tip: replace the default address with your real receiving address before publishing.</div>
+        </div>
+      </div>
+
+      <div>
+        <div class="field">
+          <label class="small">Donation amount (BTC) — leave blank for donor to choose</label>
+          <input id="amount" class="input" placeholder="e.g. 0.01" />
+        </div>
+
+        <div class="field">
+          <label class="small">Label (optional)</label>
+          <input id="label" class="input" placeholder="Support our cause" />
+        </div>
+
+        <div class="field">
+          <label class="small">Message (optional)</label>
+          <input id="message" class="input" placeholder="Thank you!" />
+        </div>
+
+        <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+          <button id="makeQR" class="btn">Update QR</button>
+          <button id="clear" class="btn ghost">Clear fields</button>
+        </div>
+
+        <div style="margin-top:12px">
+          <div class="small">Quick tiers</div>
+          <div class="tiers" style="margin-top:8px">
+            <button class="btn tier">0.005</button>
+            <button class="btn tier">0.01</button>
+            <button class="btn tier">0.05</button>
+            <button class="btn tier">0.1</button>
+          </div>
+        </div>
+
+        <div class="notes">
+          <strong>Important security & privacy notes:</strong>
+          <ul>
+            <li>Do <strong>not</strong> paste private keys or seeds here — this is a receive-only page.</li>
+            <li>Donations are irreversible and public on the blockchain; consider using a new address per campaign to improve privacy.</li>
+            <li>This page is static — if you host it, anyone can view the receiving address and transactions.</li>
+          </ul>
+        </div>
+
+        <div class="footer">
+          <div class="small"><strong>Hosting</strong>: put this single HTML file on GitHub Pages, Netlify, or any static host. If you want donation tracking or multiple addresses, you'll need a server side component.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- QRCode.js from CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script>
+    // Helper: create BIP21 URI
+    function makeBIP21(addr, amount, label, message){
+      if(!addr) return '';
+      let uri = 'bitcoin:' + addr;
+      const params = [];
+      if(amount) params.push('amount=' + encodeURIComponent(amount));
+      if(label) params.push('label=' + encodeURIComponent(label));
+      if(message) params.push('message=' + encodeURIComponent(message));
+      if(params.length) uri += '?' + params.join('&');
+      return uri;
+    }
+
+    const qrcodeEl = document.getElementById('qrcode');
+    let qrcode = new QRCode(qrcodeEl, {
+      text: 'bitcoin:1ExampleBTCAddressReplaceMe11111111111',
+      width: 260,
+      height: 260,
+      colorDark : '#000000',
+      colorLight : '#ffffff',
+      correctLevel : QRCode.CorrectLevel.H
+    });
+
+    function updateQR(){
+      const addr = document.getElementById('address').value.trim();
+      const amount = document.getElementById('amount').value.trim();
+      const label = document.getElementById('label').value.trim();
+      const message = document.getElementById('message').value.trim();
+      const uri = makeBIP21(addr, amount, label, message);
+      qrcode.clear();
+      qrcode.makeCode(uri || addr);
+    }
+
+    document.getElementById('makeQR').addEventListener('click', updateQR);
+    document.getElementById('address').addEventListener('change', updateQR);
+
+    document.getElementById('copyAddr').addEventListener('click', async ()=>{
+      const addr = document.getElementById('address').value.trim();
+      try{
+        await navigator.clipboard.writeText(addr);
+        const old = document.getElementById('copyAddr').textContent;
+        document.getElementById('copyAddr').textContent = 'Copied!';
+        setTimeout(()=>document.getElementById('copyAddr').textContent = old,1500);
+      }catch(e){alert('Copy failed — select and copy manually.')}
+    });
+
+    document.getElementById('openExplorer').addEventListener('click', ()=>{
+      const addr = document.getElementById('address').value.trim();
+      if(!addr) return alert('Please enter an address first.');
+      const url = 'https://blockstream.info/address/' + encodeURIComponent(addr);
+      window.open(url,'_blank');
+    });
+
+    document.getElementById('clear').addEventListener('click', ()=>{
+      document.getElementById('amount').value = '';
+      document.getElementById('label').value = '';
+      document.getElementById('message').value = '';
+      updateQR();
+    });
+
+    document.querySelectorAll('.tier').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        document.getElementById('amount').value = btn.textContent;
+        updateQR();
+      })
+    });
+
+    // Initialize
+    updateQR();
+  </script>
+</body>
+</html>
